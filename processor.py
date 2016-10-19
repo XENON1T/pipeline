@@ -39,7 +39,7 @@ def LoopQueue():
         
         # Get the name from pymongo
         runclient = MongoClient(
-            "mongodb://pax:luxstinks@copslx50.fysik.su.se:27017/run"
+            "mongodb://user:pw@copslx50.fysik.su.se:27017/run"
         )
         runs_collection = runclient['run']['runs_new']
 
