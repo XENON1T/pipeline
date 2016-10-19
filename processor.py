@@ -117,8 +117,8 @@ def LoopQueue():
 def ClearDynamoRange(file_name, event_start, event_finish):
 
     db = boto3.resource('dynamodb',region_name='eu-central-1',
-                    aws_secret_access_key="Fl+h0sGscRZ4zDCJsPQbu2+MIMOWuPleClWogxrZ",
-                    aws_access_key_id="AKIAJ4SJ6BEF7T6R2XPA")
+                    aws_secret_access_key="key",
+                    aws_access_key_id="id")
     table = db.Table('reduced')
 
     with table.batch_writer() as batch:
