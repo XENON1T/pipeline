@@ -91,8 +91,8 @@ def LoopQueue():
             },
             "MongoDB":
             {
-                "user": "pax",
-                "password": "luxstinks",
+                "user": "user",
+                "password": "pw",
                 "host": "copslx50.fysik.su.se",
                 "port": 27017,
                 "database": "run"
