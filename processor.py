@@ -85,11 +85,7 @@ def LoopQueue():
             "AmazonAWS.WriteDynamoDB":
             {
                 "fields_to_ignore": ['sum_waveforms',
-                                     'sum_waveform',
-                                    'reconstructed_positions',      
-                                     'area_per_channel',
-                                     'n_saturated_per_channel',             
-                                     'hits_per_channel',
+                                     'sum_waveform', 
                                      'all_hits',
                                      'sum_waveform_top',
                                      'trigger_signals',
