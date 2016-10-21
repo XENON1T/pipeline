@@ -8,6 +8,7 @@ import shutil
 from json import dumps
 import requests
 from pax import core
+import multiprocessing
 
 s3_bucket="xenon1t-eu-raw"
 
@@ -58,9 +59,10 @@ def LoopQueue():
             return
         
         # Clear all the events from Dynamo if they're there
-        print("Clearing old entries with name " + name + " from " + 
-              str(first_event) + " to " + str(last_event) )
-        ClearDynamoRange(name, first_event, last_event)
+        #print("Clearing old entries with name " + name + " from " + 
+        #      str(first_event) + " to " + str(last_event) )
+        #ClearDynamoRange(name, first_event, last_event)
+        events_to_process = CheckDynamoRange(name, first_event, last_event)
 
         # Copy the run to a local tempfile
         directory_name = tempfile.mkdtemp()
@@ -80,7 +82,8 @@ def LoopQueue():
                 'input_name': dlpath,
                 'output': ['AmazonAWS.WriteDynamoDB'],
                 'encoder_plugin': None,
-                'n_cpus': 8
+                'n_cpus': multiprocessing.cpu_count(),
+                'events_to_process': events_to_process
             },
             "AmazonAWS.WriteDynamoDB":
             {
@@ -136,7 +139,7 @@ def UpdateRunsDB(uuid, nev, status):
     """
 
     # Query dynamo to check if we have all the events
-    db = boto3.resource('dynamodb',region_name='eu-central-1',
+    db = boto3.resource('dynamodb',region_name=os.getenv("AWS_REGION"),
                         aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
                         aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"))
     table = db.Table('reduced')
@@ -167,11 +170,37 @@ def UpdateRunsDB(uuid, nev, status):
                        headers=headers)
     
     
+def CheckDynamoRange(file_name, event_start, event_finish):
+    """
+    Returns a list with all events that should be processed
+    """
+    db = boto3.resource('dynamodb',region_name=os.getenv("AWS_REGION"),
+                aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+                aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"))
+    table = db.Table('reduced')
     
+    response = table.query(
+        KeyConditionExpression=Key('dataset_name').eq(file_name),
+        ProjectionExpression="#nm, event_number",
+        ExpressionAttributeNames={ "#nm": "dataset_name" },
+    )
+
+    numbers = []
+    for i in response[u'Items']:
+        numbers.append(int(i['event_number']))
+    snumbers = sorted(numbers, key=int, reverse=False)
+    
+    to_process = []
+    for event  in range(event_start, event_finish):
+        if event in snumbers:
+            continue
+        to_process.append(event)
+
+    return to_process
 
 def ClearDynamoRange(file_name, event_start, event_finish):
 
-    db = boto3.resource('dynamodb',region_name='eu-central-1',
+    db = boto3.resource('dynamodb',region_name=os.getenv("AWS_REGION"),
                         aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
                         aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"))
     table = db.Table('reduced')
