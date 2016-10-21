@@ -53,6 +53,11 @@ def LoopQueue():
             uuid = doc['_id']
             if 'trigger' in doc and 'events_built' in doc['trigger']:
                 nev  = doc['trigger']['events_built']
+            if 'source' in doc and 'type' in doc['source']:
+                if doc['source']['type'] == 'LED':
+                    print("Can't do LED mode right now. Removing from queue.")
+                    message.delete()
+                    return
         except Exception as e:
             print("Couldn't find run in DB, exiting: "+str(e))
             return
