@@ -54,8 +54,8 @@ def LoopQueue():
             uuid = doc['_id']
             if 'trigger' in doc and 'events_built' in doc['trigger']:
                 nev  = doc['trigger']['events_built']
-            if 'source' in doc and 'type' in doc['source']:
-                if doc['source']['type'] == 'LED':
+            if 'source_type' in doc:
+                if doc['source_type'] == 'LED':
                     print("Can't do LED mode right now. Removing from queue.")
                     message.delete()
                     return
