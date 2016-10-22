@@ -126,7 +126,7 @@ def LoopQueue():
             ClearDynamoRange(name, first_event, last_event)
             
         shutil.rmtree(directory_name)
-        UpdateRunsDB(uuid, nev, status, number)
+        #UpdateRunsDB(uuid, nev, status, number)
         
         # If everything is good kill the message so we don't
         # process again. Otherwise if we somehow die before getting 
