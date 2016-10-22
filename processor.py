@@ -126,7 +126,7 @@ def LoopQueue():
             ClearDynamoRange(name, first_event, last_event)
             
         shutil.rmtree(directory_name)
-        UpdateRunsDB(uuid, nev, status)
+        UpdateRunsDB(uuid, nev, status, number)
         
         # If everything is good kill the message so we don't
         # process again. Otherwise if we somehow die before getting 
@@ -138,7 +138,7 @@ def LoopQueue():
 
 
 
-def UpdateRunsDB(uuid, nev, status):
+def UpdateRunsDB(uuid, nev, status, rnum):
     """ 
     Makes an API call to tell the runs DB what we did
     """
@@ -148,12 +148,8 @@ def UpdateRunsDB(uuid, nev, status):
                         aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
                         aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"))
     table = db.Table('reduced')
-    ret = table.query(KeyConditionExpression=Key("dataset_name").eq("161019_0353"), 
+    ret = table.query(KeyConditionExpression=Key("run_number").eq(rnum), 
                       Select="COUNT")
-    if status != "error":
-        status = "transferred"
-        if ret['Count'] != nev:
-            status="transferring"
     
 
     # Now call the API to update with the proper status
@@ -166,11 +162,20 @@ def UpdateRunsDB(uuid, nev, status):
         "host": "aws",
         "location": "dynamodb:reduced",
         "checksum": "NA",
-        "status": status,
+        "status": "remove",
         "type": "processed"
     }
     url = os.getenv("XENON_API_URL") + str(uuid) + "/"
     pars=dumps(update)
+    ret = requests.put(url, data=pars,
+                       headers=headers)
+
+    if status != "error":
+        status = "transferred"
+        if ret['Count'] != nev:
+            status="transferring"
+    update['status'] = status
+    pars = dumps(update)
     ret = requests.put(url, data=pars,
                        headers=headers)
     
